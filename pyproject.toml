@@ -1,0 +1,33 @@
+[project]
+name = "traceflow-lite"
+version = "0.1.0"
+description = "TraceFlow Lite — Agent Reliability & Evaluation Control Plane"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "langgraph>=0.2.0",
+  "langchain-core>=0.3.0",
+  "streamlit>=1.36",
+  "chromadb>=0.5.0",
+  "sentence-transformers>=3.0.0",
+  "tenacity>=8.2.3",
+  "cachetools>=5.3.3",
+  "python-dotenv>=1.0.1",
+  "opentelemetry-sdk>=1.39.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.5.0",
+  "mypy>=1.10",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q --disable-warnings --maxfail=1 --cov=traceflow --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
