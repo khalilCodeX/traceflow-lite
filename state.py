@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from tf_types import Mode, Strictness, RunConfig, EvalDecision
+from tf_types import RunConfig, EvalDecision
 
 class TaskSpec(BaseModel):
     user_input: str
