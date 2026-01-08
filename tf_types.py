@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Optional
+from datetime import datetime, timezone
 
 class Mode(StrEnum):
     """
@@ -91,9 +92,43 @@ class RunResult:
     trace_id: str
     status: RunStatus
     mode: Mode
-
     answer: str
     eval_decision: Optional[EvalSummary] = None
     telemetry: TelemetrySummary = TelemetrySummary()
-
     err: Optional[str] = None
+
+# Persistence records (for SQLite)
+@dataclass
+class TraceRecord:
+    trace_id: str
+    user_input: str
+    config: RunConfig
+    mode: Mode
+    status: RunStatus = RunStatus.RUNNING
+    final_answer: str | None = None
+    error: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))   
+    finished_at: datetime | None = None
+
+@dataclass
+class StepRecord:
+    trace_id: str
+    step_seq: int
+    node_name: str
+    input_data: dict | None = None
+    output_data: dict | None = None
+    tokens: int = 0
+    cost_usd: float = 0.0
+    latency_ms: float = 0.0
+    error: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+@dataclass 
+class EvalRecord:
+    trace_id: str
+    step_seq: int
+    decision: EvalDecision
+    reasons: list[str] | None = None
+    scores: dict[str, float] | None = None
+    revision_instructions: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
