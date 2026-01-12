@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from tf_types import RunConfig, EvalDecision
+from tf_types import RunConfig, EvalDecision, RetrievedChunk    
 
 class TaskSpec(BaseModel):
     user_input: str
@@ -10,19 +10,13 @@ class Plan(BaseModel):
     needs_context: bool = False
     focus_areas: list[str] | None = None
 
-class RetrievedChunk(BaseModel):
-    chunk_id: str
-    content: str
-    source: str
-    relevance_score: float
-    metadata: str | None = None
-
 class Draft(BaseModel):
     content: str
     citations: list[str]
     model: str
     token_count: int
     latency_ms: float
+    cost_usd: float = 0.0
     
 class EvalReport(BaseModel):
     decision: EvalDecision
@@ -43,6 +37,3 @@ class TraceFlowState(BaseModel):
     final_answer: str | None = None
     context: list[RetrievedChunk] = []
     revisions: int = 0
-
-
-
