@@ -1,5 +1,6 @@
 # TraceFlow Lite
 
+**A control plane that makes agentic systems shippable: tracing + eval gates + fallback + budgets + replay.**
 **A production-grade SDK for building reliable, observable AI agent workflows.**
 
 TraceFlow Lite wraps your LLM calls with enterprise-ready reliability mechanisms: eval gates, cost/latency constraints, provider abstraction, trace persistence, and replay capabilities — all orchestrated through LangGraph.
@@ -276,4 +277,4 @@ Contributions are welcome! Please read our contributing guidelines and submit PR
 
 ## License
 
-MIT
+Apache 2.0
