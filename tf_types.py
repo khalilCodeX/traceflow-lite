@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Optional
+from typing import Callable, Optional
 from datetime import datetime, timezone
 
 class Mode(StrEnum):
@@ -46,16 +46,27 @@ class RunConfig:
     strictness: Strictness = Strictness.BALANCED
 
     # Reliability
-    model: str | None = None
-    provider: str | None = "openai"
+    model: str = "gpt-3.5-turbo"
+    provider: str = "openai"
     max_revisions: int = 3
     max_latency_ms: int | None = 30000
     temperature: float | None = 0.2
     top_k: int | None = 5
     enable_cache: bool = True
+    max_tokens: int = 1024
 
     # budget
     max_cost_usd: float | None = 1.50
+
+    # RAG
+    retriever_fn: Callable[[str], list[RetrievedChunk]] | None = None
+@dataclass
+class RetrievedChunk:
+    chunk_id: str
+    content: str
+    source: str
+    relevance_score: float
+    metadata: str | None = None
 
 @dataclass(frozen=True)
 class EvalSummary:
@@ -105,6 +116,8 @@ class TraceRecord:
     config: RunConfig
     mode: Mode
     status: RunStatus = RunStatus.RUNNING
+    model: str = "gpt-3.5-turbo"
+    provider: str = "openai"
     final_answer: str | None = None
     error: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))   

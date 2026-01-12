@@ -1,6 +1,5 @@
 import sqlite3
 import os
-
 class Sqlite:
 
     @staticmethod
@@ -37,7 +36,7 @@ class Sqlite:
           Called once on startup
         """
         with conn:
-
+            # TODO: Need to add model, provider, cost breakdown, etc.
             #-- traces: one row per run()
             conn.execute("""
             CREATE TABLE IF NOT EXISTS traces (
@@ -45,7 +44,9 @@ class Sqlite:
                 status TEXT NOT NULL,
                 mode TEXT NOT NULL,
                 user_input TEXT NOT NULL,
-                config_json TEXT NOT NULL, 
+                config_json TEXT NOT NULL,
+                model TEXT NOT NULL,
+                provider TEXT NOT NULL, 
                 final_answer TEXT,
                 error TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

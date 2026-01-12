@@ -1,5 +1,5 @@
 import json
-from dataclasses import asdict
+from dataclasses import fields
 from datetime import datetime, timezone
 from .sqlite import Sqlite
 from tf_types import EvalDecision, EvalRecord, Mode, RunStatus, StepRecord, TraceRecord, RunConfig
@@ -16,22 +16,36 @@ class TraceStore:
                 status TEXT NOT NULL,
                 mode TEXT NOT NULL,
                 user_input TEXT NOT NULL,
-                config_json TEXT NOT NULL, 
+                config_json TEXT NOT NULL,
+                model TEXT NOT NULL,
+                provider TEXT NOT NULL, 
                 final_answer TEXT,
                 error TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 finished_at TIMESTAMP,
                 updated_db_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         """
+        # Exclude retriever_fn from JSON (functions can't be serialized)
+        config_dict = {}
+        for f in fields(trace_data.config):
+            if f.name != 'retriever_fn':
+                value = getattr(trace_data.config, f.name)
+                # Convert enums to their string value
+                if hasattr(value, 'value'):
+                    value = value.value
+                config_dict[f.name] = value
+        
         self.conn.execute("""
-        INSERT INTO traces (trace_id, status, mode, user_input, config_json, final_answer, error, created_at, finished_at, updated_db_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO traces (trace_id, status, mode, user_input, config_json, model, provider, final_answer, error, created_at, finished_at, updated_db_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             trace_data.trace_id,
             trace_data.status.value,
             trace_data.mode.value,
             trace_data.user_input,
-            json.dumps(asdict(trace_data.config)),
+            json.dumps(config_dict),
+            trace_data.model,
+            trace_data.provider,
             trace_data.final_answer,
             trace_data.error,
             trace_data.created_at.isoformat(),
@@ -66,6 +80,8 @@ class TraceStore:
             config=RunConfig(**json.loads(row["config_json"])),
             mode=Mode(row["mode"]),
             status=RunStatus(row["status"]),
+            model=row["model"],
+            provider=row["provider"],
             final_answer=row["final_answer"],
             error=row["error"],
             created_at=datetime.fromisoformat(row["created_at"]),
