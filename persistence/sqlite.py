@@ -70,6 +70,7 @@ class Sqlite:
                 latency_ms INTEGER DEFAULT 0,
                 cost_usd REAL DEFAULT 0.0,
                 error TEXT,
+                cache_hit INTEGER DEFAULT 0,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_db_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (trace_id) REFERENCES traces(trace_id) ON DELETE CASCADE
@@ -91,3 +92,16 @@ class Sqlite:
                 FOREIGN KEY (trace_id) REFERENCES traces(trace_id) ON DELETE CASCADE
                 );
                 """)
+            
+            # cache: LLM response caching
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS llm_cache (
+                cache_key TEXT PRIMARY KEY,
+                model TEXT NOT NULL,
+                response_content TEXT NOT NULL,
+                input_tokens INTEGER DEFAULT 0,
+                output_tokens INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                hit_count INTEGER DEFAULT 0
+            );
+            """)

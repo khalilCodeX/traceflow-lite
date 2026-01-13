@@ -120,12 +120,13 @@ class TraceStore:
                 latency_ms INTEGER DEFAULT 0,
                 cost_usd REAL DEFAULT 0.0,
                 error TEXT,
+                cache_hit INTEGER DEFAULT 0,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_db_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         """
         self.conn.execute("""
-        INSERT INTO trace_steps (trace_id, step_seq, node_name, input_json, output_json, tokens, latency_ms, cost_usd, error, created_at, updated_db_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO trace_steps (trace_id, step_seq, node_name, input_json, output_json, tokens, latency_ms, cost_usd, error, cache_hit, created_at, updated_db_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             step_record.trace_id,
             step_record.step_seq,
@@ -136,6 +137,7 @@ class TraceStore:
             step_record.latency_ms,
             step_record.cost_usd,
             step_record.error,
+            step_record.cache_hit,
             datetime.now(timezone.utc).isoformat(),
             datetime.now(timezone.utc).isoformat()
         ))
@@ -151,7 +153,8 @@ class TraceStore:
         tokens: int = 0
         cost_usd: float = 0.0
         latency_ms: float = 0.0
-        error: str | None = None
+        error: str | None = None,
+        cache_hit: bool = False
         created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
        """
         return StepRecord(
@@ -164,6 +167,7 @@ class TraceStore:
             latency_ms=row["latency_ms"],
             cost_usd=row["cost_usd"],
             error=row["error"],
+            cache_hit=bool(row["cache_hit"]),
             created_at=datetime.fromisoformat(row["created_at"]),
         )
 

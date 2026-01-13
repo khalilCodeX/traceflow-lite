@@ -284,6 +284,8 @@ def render_new_run_page():
             max_cost = st.number_input("Max Cost ($)", 0.01, 10.0, 1.50, step=0.1)
             max_latency = st.number_input("Max Latency (ms)", 1000, 60000, 30000, step=1000)
             max_revisions = st.slider("Max Revisions", 0, 5, 3)
+            enable_cache = st.checkbox("Enable LLM Cache", value=True,
+                                        help="Cache responses to save cost on repeated queries")
     
     if st.button("▶️ Execute Run", use_container_width=True, type="primary"):
         if not user_input.strip():
@@ -300,7 +302,8 @@ def render_new_run_page():
                 max_tokens=max_tokens,
                 max_cost_usd=max_cost,
                 max_latency_ms=max_latency,
-                max_revisions=max_revisions
+                max_revisions=max_revisions,
+                enable_cache=enable_cache
             )
             
             result = client.run(user_input, config)
@@ -534,8 +537,9 @@ def render_trace_detail(trace_id: str):
         # Steps list
         for step in steps:
             step_class = step.node_name if step.node_name in ["executor", "evaluator"] else ""
+            cache_badge = " ⚡ Cached" if step.cache_hit else ""
             
-            with st.expander(f"**{step.step_seq + 1}. {step.node_name.upper()}** — {step.latency_ms:.0f}ms"):
+            with st.expander(f"**{step.step_seq + 1}. {step.node_name.upper()}**{cache_badge} — {step.latency_ms:.0f}ms"):
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.metric("Tokens", step.tokens)

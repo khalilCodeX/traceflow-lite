@@ -1,3 +1,4 @@
+from .cache_provider import CachedProvider
 from .anthropic_provider import AnthropicProvider
 from tf_types import RunConfig
 from .base import BaseProvider
@@ -13,4 +14,10 @@ def get_provider(config: RunConfig) -> BaseProvider:
     provider_cls = _PROVIDERS.get(config.provider)
     if not provider_cls:
         raise ValueError(f"Unsupported provider: {config.provider}")
-    return provider_cls()
+    
+    provider = provider_cls()
+
+    if config.enable_cache:
+        return CachedProvider(provider, enable_cache=True)
+    
+    return provider

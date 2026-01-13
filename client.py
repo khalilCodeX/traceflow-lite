@@ -47,7 +47,8 @@ class TraceFlowClient:
                     tokens=step_data.get("tokens", 0),
                     cost_usd=step_data.get("cost_usd", 0.0),
                     latency_ms=step_data.get("latency_ms", 0.0),
-                    error=step_data.get("error")
+                    error=step_data.get("error"),
+                    cache_hit=step_data.get("cache_hit", False)
                 ))
 
             self.dbStore.update_trace(

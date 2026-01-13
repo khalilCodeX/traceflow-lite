@@ -102,6 +102,7 @@ def planner_node(state: TraceFlowState) -> dict:
         "latency_ms": (time.perf_counter() - start) * 1000,
         "tokens": tokens,
         "cost_usd": cost,
+        "cache_hit": getattr(provider, 'last_cache_hit', False)
     })
         
     return {
@@ -183,6 +184,7 @@ def executor_node(state: TraceFlowState) -> dict:
         "latency_ms": total_latency_ms,
         "tokens": total_tokens,
         "cost_usd": cost_usd,
+        "cache_hit": getattr(provider, 'last_cache_hit', False)
     })
     
     return {
