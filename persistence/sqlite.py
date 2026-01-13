@@ -1,7 +1,8 @@
 import sqlite3
 import os
-class Sqlite:
 
+
+class Sqlite:
     @staticmethod
     def get_connection(db_path: str = "traceflow.db") -> sqlite3.Connection:
         """
@@ -18,7 +19,7 @@ class Sqlite:
 
         # Use a dictionary-like row factory for better usability
         conn.row_factory = sqlite3.Row
-    
+
         # Execute optimized PRAGMAs
         # journal_mode=WAL: Enables Write-Ahead Logging for better concurrency
         # synchronous=NORMAL: Safe when using WAL; reduces disk sync overhead
@@ -28,18 +29,18 @@ class Sqlite:
         conn.execute("PRAGMA synchronous = NORMAL;")
         conn.execute("PRAGMA mmap_size = 30000000000;")  # Up to 30GB if available
         conn.execute("PRAGMA foreign_keys = ON;")
-        
+
         return conn
-    
+
     @staticmethod
     def init_db(conn: sqlite3.Connection) -> None:
         """
-          Create tables if not exist
-          Called once on startup
+        Create tables if not exist
+        Called once on startup
         """
         with conn:
             # TODO: Need to add model, provider, cost breakdown, etc.
-            #-- traces: one row per run()
+            # -- traces: one row per run()
             conn.execute("""
             CREATE TABLE IF NOT EXISTS traces (
                 trace_id TEXT PRIMARY KEY,
@@ -56,8 +57,8 @@ class Sqlite:
                 updated_db_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
             """)
-            
-            #-- steps: one row per node execution
+
+            # -- steps: one row per node execution
             conn.execute("""
             CREATE TABLE IF NOT EXISTS trace_steps (
                 step_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,8 +77,8 @@ class Sqlite:
                 FOREIGN KEY (trace_id) REFERENCES traces(trace_id) ON DELETE CASCADE
                 );
                 """)
-            
-            #-- evals: one row per eval gate decision
+
+            # -- evals: one row per eval gate decision
             conn.execute("""
             CREATE TABLE IF NOT EXISTS trace_evals (
                 eval_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,7 +93,7 @@ class Sqlite:
                 FOREIGN KEY (trace_id) REFERENCES traces(trace_id) ON DELETE CASCADE
                 );
                 """)
-            
+
             # cache: LLM response caching
             conn.execute("""
             CREATE TABLE IF NOT EXISTS llm_cache (

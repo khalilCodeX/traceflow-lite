@@ -5,43 +5,53 @@ from enum import StrEnum
 from typing import Callable, Optional
 from datetime import datetime, timezone
 
+
 class Mode(StrEnum):
     """
     Selects the TraceFlow workflow + output contract + eval gates.
     """
+
     GROUNDED_QA = "grounded_qa"
     TRIAGE_PLAN = "triage_plan"
     CHANGE_SAFETY = "change_safety"
+
 
 class RunStatus(StrEnum):
     """
     Overall run status (not the eval decision).
     """
+
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+
 
 class Strictness(StrEnum):
     """
     Controls how hard the eval gate is and how verbose/structured outputs must be.
     """
+
     LENIENT = "lenient"
     BALANCED = "balanced"
     STRICT = "strict"
+
 
 class EvalDecision(StrEnum):
     """
     Possible eval decisions for a TraceFlow run.
     """
+
     PASS = "pass"
     REVISE = "revise"
     FALLBACK = "fallback"
+
 
 @dataclass(frozen=True)
 class RunConfig:
     """
     Configuration for a TraceFlow run.
     """
+
     mode: Mode = Mode.GROUNDED_QA
     strictness: Strictness = Strictness.BALANCED
 
@@ -60,6 +70,8 @@ class RunConfig:
 
     # RAG
     retriever_fn: Callable[[str], list[RetrievedChunk]] | None = None
+
+
 @dataclass
 class RetrievedChunk:
     chunk_id: str
@@ -68,20 +80,24 @@ class RetrievedChunk:
     relevance_score: float
     metadata: str | None = None
 
+
 @dataclass(frozen=True)
 class EvalSummary:
     """
     Summary of eval results for a TraceFlow run.
     """
+
     decision: EvalDecision
     reasons: list[str]
     scores: dict[str, float]
+
 
 @dataclass(frozen=True)
 class TelemetrySummary:
     """
     Summary of telemetry data for a TraceFlow run.
     """
+
     total_tokens: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
@@ -94,12 +110,13 @@ class TelemetrySummary:
     step_count: int = 0
     revision_count: int = 0
 
-  
+
 @dataclass(frozen=True)
 class RunResult:
     """
     Result of a TraceFlow run.
     """
+
     trace_id: str
     status: RunStatus
     mode: Mode
@@ -107,6 +124,7 @@ class RunResult:
     eval_decision: Optional[EvalSummary] = None
     telemetry: TelemetrySummary = TelemetrySummary()
     err: Optional[str] = None
+
 
 # Persistence records (for SQLite)
 @dataclass
@@ -120,8 +138,9 @@ class TraceRecord:
     provider: str = "openai"
     final_answer: str | None = None
     error: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))   
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     finished_at: datetime | None = None
+
 
 @dataclass
 class StepRecord:
@@ -137,7 +156,8 @@ class StepRecord:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     cache_hit: bool = False
 
-@dataclass 
+
+@dataclass
 class EvalRecord:
     trace_id: str
     step_seq: int

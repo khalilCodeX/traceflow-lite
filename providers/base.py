@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+
 @dataclass
 class ProviderResponse:
     content: str
     input_tokens: int
     output_tokens: int
     model: str
+
 
 class BaseProvider(ABC):
     @abstractmethod

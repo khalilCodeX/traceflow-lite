@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class AnthropicProvider(BaseProvider):
     """Anthropic Claude provider."""
 
@@ -22,12 +23,12 @@ class AnthropicProvider(BaseProvider):
         messages: list[dict],
         temperature: float = 0.2,
         max_tokens: int = 1024,
-        **kwargs
+        **kwargs,
     ) -> ProviderResponse:
         # Anthropic expects system prompt separately
         system_prompt = None
         chat_messages = []
-        
+
         for msg in messages:
             if msg["role"] == "system":
                 system_prompt = msg["content"]

@@ -9,15 +9,16 @@ _PROVIDERS: dict[str, type[BaseProvider]] = {
     "anthropic": AnthropicProvider,
 }
 
+
 def get_provider(config: RunConfig) -> BaseProvider:
     """Factory to get the appropriate provider based on config."""
     provider_cls = _PROVIDERS.get(config.provider)
     if not provider_cls:
         raise ValueError(f"Unsupported provider: {config.provider}")
-    
+
     provider = provider_cls()
 
     if config.enable_cache:
         return CachedProvider(provider, enable_cache=True)
-    
+
     return provider
