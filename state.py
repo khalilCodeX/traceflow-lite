@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from tf_types import RunConfig, EvalDecision, RetrievedChunk    
 
 class TaskSpec(BaseModel):
-    user_input: str
-    constraints: dict[str, str] | None = None
+    user_input: str = ""
+    constraints: dict[str, str] = {}
 
 class Plan(BaseModel):
     steps: list[str]
@@ -37,3 +37,4 @@ class TraceFlowState(BaseModel):
     final_answer: str | None = None
     context: list[RetrievedChunk] = []
     revisions: int = 0
+    executed_steps: list[dict] = []

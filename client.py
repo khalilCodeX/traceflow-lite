@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from persistence.trace_store import TraceStore
-from tf_types import Mode, RunConfig, RunResult, RunStatus, TraceRecord, EvalSummary
+from tf_types import Mode, RunConfig, RunResult, RunStatus, StepRecord, TraceRecord, EvalSummary
 from state import TraceFlowState, TaskSpec
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from graph_flow.graph import build_traceflow_graph
@@ -36,6 +36,19 @@ class TraceFlowClient:
             final_state_dict = self.graph.invoke(initial_state)
             final_state = TraceFlowState(**final_state_dict)
             answer = final_state.final_answer or (final_state.draft.content if final_state.draft else "")
+
+            for step_seq, step_data in enumerate(final_state.executed_steps):
+                self.dbStore.insert_step(StepRecord(
+                    trace_id=trace_id,
+                    step_seq=step_seq,
+                    node_name=step_data.get("node_name", ""),
+                    input_data=step_data.get("input_data"),
+                    output_data=step_data.get("output_data"),
+                    tokens=step_data.get("tokens", 0),
+                    cost_usd=step_data.get("cost_usd", 0.0),
+                    latency_ms=step_data.get("latency_ms", 0.0),
+                    error=step_data.get("error")
+                ))
 
             self.dbStore.update_trace(
                 trace_id=trace_id,
