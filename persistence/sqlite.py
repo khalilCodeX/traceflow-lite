@@ -12,7 +12,9 @@ class Sqlite:
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir, exist_ok=True)
 
-        conn = sqlite3.connect(db_path)
+        # check_same_thread=False allows connection to be used across threads
+        # This is safe when combined with WAL mode which handles concurrent access
+        conn = sqlite3.connect(db_path, check_same_thread=False)
 
         # Use a dictionary-like row factory for better usability
         conn.row_factory = sqlite3.Row
