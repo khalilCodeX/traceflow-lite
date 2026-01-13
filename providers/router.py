@@ -1,9 +1,11 @@
+from .anthropic_provider import AnthropicProvider
 from tf_types import RunConfig
 from .base import BaseProvider
 from .openai_provider import OpenAIProvider
 
 _PROVIDERS: dict[str, type[BaseProvider]] = {
     "openai": OpenAIProvider,
+    "anthropic": AnthropicProvider,
 }
 
 def get_provider(config: RunConfig) -> BaseProvider:
