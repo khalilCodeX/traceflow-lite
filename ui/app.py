@@ -381,7 +381,6 @@ def render_new_run_page():
                         
                         # Create progress bar
                         progress_bar = st.progress(0, text="Creating embeddings...")
-                        status_text = st.empty()
                         
                         def update_progress(current, total):
                             progress = current / total

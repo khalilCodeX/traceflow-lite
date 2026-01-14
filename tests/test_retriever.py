@@ -4,7 +4,7 @@ All tests are mocked to run without API keys or external services.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from utils.vector_types import chroma_params
 from tf_types import RetrievedChunk
 
