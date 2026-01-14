@@ -24,6 +24,21 @@ try:
 except ImportError:
     RAG_AVAILABLE = False
 
+# Optional document parsing imports
+try:
+    from pypdf import PdfReader
+
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
+try:
+    from docx import Document as DocxDocument
+
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
 # Page config
 st.set_page_config(page_title="TraceFlow Lite", layout="wide", initial_sidebar_state="expanded")
 
@@ -346,14 +361,51 @@ def render_new_run_page():
                     # Split by double newlines or treat as single doc
                     documents = [d.strip() for d in doc_text.split("\n\n") if d.strip()]
             else:
+                # Build allowed file types based on available parsers
+                allowed_types = ["txt", "md"]
+                if PDF_AVAILABLE:
+                    allowed_types.append("pdf")
+                if DOCX_AVAILABLE:
+                    allowed_types.append("docx")
+
                 uploaded_files = st.file_uploader(
-                    "Upload text files",
-                    type=["txt", "md"],
+                    "Upload documents",
+                    type=allowed_types,
                     accept_multiple_files=True,
+                    help=f"Supported: {', '.join(t.upper() for t in allowed_types)}",
                 )
                 for file in uploaded_files:
-                    content = file.read().decode("utf-8")
-                    documents.append(content)
+                    file_ext = file.name.lower().split(".")[-1]
+
+                    if file_ext == "pdf" and PDF_AVAILABLE:
+                        # Extract text from PDF
+                        try:
+                            pdf_reader = PdfReader(file)
+                            text_parts = []
+                            for page in pdf_reader.pages:
+                                page_text = page.extract_text()
+                                if page_text:
+                                    text_parts.append(page_text)
+                            content = "\n\n".join(text_parts)
+                        except Exception as e:
+                            st.warning(f"Failed to parse PDF {file.name}: {e}")
+                            continue
+                    elif file_ext == "docx" and DOCX_AVAILABLE:
+                        # Extract text from DOCX
+                        try:
+                            doc = DocxDocument(file)
+                            content = "\n\n".join(
+                                [para.text for para in doc.paragraphs if para.text.strip()]
+                            )
+                        except Exception as e:
+                            st.warning(f"Failed to parse DOCX {file.name}: {e}")
+                            continue
+                    else:
+                        # Plain text files (txt, md)
+                        content = file.read().decode("utf-8")
+
+                    if content.strip():
+                        documents.append(content)
 
             # Vector store settings
             col1, col2 = st.columns(2)
