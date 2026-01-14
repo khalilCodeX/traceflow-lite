@@ -13,11 +13,19 @@ import streamlit as st
 from client import TraceFlowClient
 from tf_types import Mode, RunConfig, Strictness
 from datetime import datetime
+import os
+
+# Optional RAG imports
+try:
+    from utils.retriever_utils import chroma_retriever
+    from utils.vector_types import chroma_params
+
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 # Page config
-st.set_page_config(
-    page_title="TraceFlow Lite", page_icon="🔍", layout="wide", initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="TraceFlow Lite", layout="wide", initial_sidebar_state="expanded")
 
 # Custom CSS for modern look
 st.markdown(
@@ -181,6 +189,15 @@ def get_client():
     return TraceFlowClient()
 
 
+@st.cache_resource
+def get_retriever(collection_name: str, db_path: str):
+    """Get or create a cached retriever instance."""
+    if not RAG_AVAILABLE:
+        return None
+    params = chroma_params(collection=collection_name, directory=db_path)
+    return chroma_retriever(local=True, params=params)
+
+
 def format_timestamp(dt: datetime) -> str:
     """Format datetime for display."""
     if dt is None:
@@ -203,7 +220,7 @@ def get_mode_badge(mode: str) -> str:
 def render_sidebar():
     """Render sidebar with navigation and new run form."""
     with st.sidebar:
-        st.markdown('<p class="main-header">🔍 TraceFlow</p>', unsafe_allow_html=True)
+        st.markdown('<p class="main-header">TraceFlow</p>', unsafe_allow_html=True)
         st.markdown(
             '<p class="sub-header">Agent Observability Platform</p>', unsafe_allow_html=True
         )
@@ -213,7 +230,7 @@ def render_sidebar():
         # Navigation
         page = st.radio(
             "Navigation",
-            ["🚀 New Run", "📋 Trace History", "📊 Analytics"],
+            ["New Run", "Trace History", "Analytics"],
             label_visibility="collapsed",
         )
 
@@ -235,7 +252,7 @@ def render_sidebar():
 
 def render_new_run_page():
     """Render the new run page."""
-    st.markdown("## 🚀 New Run")
+    st.markdown("## New Run")
     st.markdown("Execute a new agent workflow with custom configuration.")
 
     col1, col2 = st.columns([2, 1])
@@ -252,16 +269,16 @@ def render_new_run_page():
             "Mode",
             [Mode.GROUNDED_QA, Mode.TRIAGE_PLAN, Mode.CHANGE_SAFETY],
             format_func=lambda x: {
-                Mode.GROUNDED_QA: "🎯 Grounded QA",
-                Mode.TRIAGE_PLAN: "📝 Triage Plan",
-                Mode.CHANGE_SAFETY: "🛡️ Change Safety",
+                Mode.GROUNDED_QA: "Grounded QA",
+                Mode.TRIAGE_PLAN: "Triage Plan",
+                Mode.CHANGE_SAFETY: "Change Safety",
             }.get(x, x.value),
         )
 
         provider = st.selectbox(
             "Provider",
             ["openai", "anthropic"],
-            format_func=lambda x: "🤖 OpenAI" if x == "openai" else "🧠 Anthropic",
+            format_func=lambda x: "OpenAI" if x == "openai" else "Anthropic",
         )
 
         model_options = {
@@ -293,9 +310,124 @@ def render_new_run_page():
                 help="Cache responses to save cost on repeated queries",
             )
 
-    if st.button("▶️ Execute Run", use_container_width=True, type="primary"):
+    # RAG Configuration Section
+    st.divider()
+    st.markdown("### RAG Configuration (Optional)")
+
+    enable_rag = st.checkbox(
+        "Enable RAG",
+        value=False,
+        help="Use Retrieval-Augmented Generation with your own documents",
+    )
+
+    retriever_fn = None
+    top_k = 5  # Default value
+    if enable_rag:
+        if not RAG_AVAILABLE:
+            st.error("RAG dependencies not available. Install chromadb and sentence-transformers.")
+        elif not os.getenv("OPENAI_API_KEY"):
+            st.warning("OPENAI_API_KEY not set. Required for embeddings.")
+        else:
+            # Document input
+            doc_input_method = st.radio(
+                "Document Input Method",
+                ["Paste Text", "Upload Files"],
+                horizontal=True,
+            )
+
+            documents = []
+            if doc_input_method == "Paste Text":
+                doc_text = st.text_area(
+                    "Paste your documents (one per line or separated by blank lines)",
+                    height=150,
+                    placeholder="Document 1 content here...\n\nDocument 2 content here...",
+                )
+                if doc_text.strip():
+                    # Split by double newlines or treat as single doc
+                    documents = [d.strip() for d in doc_text.split("\n\n") if d.strip()]
+            else:
+                uploaded_files = st.file_uploader(
+                    "Upload text files",
+                    type=["txt", "md"],
+                    accept_multiple_files=True,
+                )
+                for file in uploaded_files:
+                    content = file.read().decode("utf-8")
+                    documents.append(content)
+
+            # Vector store settings
+            col1, col2 = st.columns(2)
+            with col1:
+                collection_name = st.text_input(
+                    "Collection Name",
+                    value="traceflow_docs",
+                    help="Name for the vector store collection",
+                )
+            with col2:
+                top_k = st.slider("Top K Results", 1, 10, 5, help="Number of chunks to retrieve")
+
+            # Initialize/update vector store
+            if documents:
+                st.info(f"{len(documents)} document(s) ready")
+
+                if st.button("Create/Update Vector Store"):
+                    try:
+                        db_path = "./chroma_db"
+                        retriever = get_retriever(collection_name, db_path)
+
+                        # Create progress bar
+                        progress_bar = st.progress(0, text="Creating embeddings...")
+
+                        def update_progress(current, total):
+                            progress = current / total
+                            progress_bar.progress(
+                                progress, text=f"Processing batch {current}/{total}..."
+                            )
+
+                        retriever.create_vector_store(documents, progress_callback=update_progress)
+
+                        progress_bar.progress(1.0, text="Complete!")
+                        st.session_state["rag_ready"] = True
+                        st.session_state["rag_collection"] = collection_name
+                        st.success(f"Vector store created with {len(documents)} documents!")
+                    except Exception as e:
+                        st.error(f"Failed to create vector store: {e}")
+
+            # Check if RAG is ready
+            if (
+                st.session_state.get("rag_ready")
+                and st.session_state.get("rag_collection") == collection_name
+            ):
+                st.success("RAG is ready! Retriever will be used in queries.")
+                retriever = get_retriever(collection_name, "./chroma_db")
+                retriever_fn = retriever.retrieve_similar_docs
+            elif st.session_state.get("rag_collection"):
+                # Collection exists from previous session
+                try:
+                    retriever = get_retriever(collection_name, "./chroma_db")
+                    # Test if collection has data
+                    if retriever.collection.count() > 0:
+                        st.success(
+                            f"Using existing collection '{collection_name}' "
+                            f"({retriever.collection.count()} chunks)"
+                        )
+                        retriever_fn = retriever.retrieve_similar_docs
+                        st.session_state["rag_ready"] = True
+                        st.session_state["rag_collection"] = collection_name
+                except Exception:
+                    pass
+
+    if st.button("Execute Run", use_container_width=True, type="primary"):
         if not user_input.strip():
             st.error("Please enter a user input.")
+            return
+
+        # Validate RAG setup if enabled
+        if enable_rag and retriever_fn is None:
+            st.error(
+                "RAG is enabled but vector store is not ready. "
+                "Please create the vector store first."
+            )
             return
 
         with st.spinner("Running workflow..."):
@@ -310,6 +442,8 @@ def render_new_run_page():
                 max_latency_ms=max_latency,
                 max_revisions=max_revisions,
                 enable_cache=enable_cache,
+                retriever_fn=retriever_fn,
+                top_k=top_k if enable_rag else 5,
             )
 
             result = client.run(user_input, config)
@@ -318,9 +452,9 @@ def render_new_run_page():
         st.divider()
 
         if result.status.value == "done":
-            st.success("✅ Run completed successfully!")
+            st.success("Run completed successfully!")
         else:
-            st.error(f"❌ Run failed: {result.err}")
+            st.error(f"Run failed: {result.err}")
 
         # Result card
         st.markdown("### Result")
@@ -389,7 +523,7 @@ def render_new_run_page():
 
 def render_trace_history_page():
     """Render the trace history page."""
-    st.markdown("## 📋 Trace History")
+    st.markdown("## Trace History")
     st.markdown("View and inspect previous agent runs.")
 
     client = get_client()
@@ -454,12 +588,12 @@ def render_trace_history_page():
                 )
 
             with col2:
-                if st.button("🔍 Details", key=f"view_{trace.trace_id}"):
+                if st.button("Details", key=f"view_{trace.trace_id}"):
                     st.session_state["selected_trace_id"] = trace.trace_id
                     st.rerun()
 
             with col3:
-                if st.button("🔄 Replay", key=f"replay_{trace.trace_id}"):
+                if st.button("Replay", key=f"replay_{trace.trace_id}"):
                     with st.spinner("Replaying..."):
                         result = client.replay(trace.trace_id)
                         st.session_state["last_trace_id"] = result.trace_id
@@ -469,7 +603,7 @@ def render_trace_history_page():
 def render_trace_detail(trace_id: str):
     """Render detailed view of a trace."""
     st.divider()
-    st.markdown("## 🔎 Trace Detail")
+    st.markdown("## Trace Detail")
 
     client = get_client()
     trace = client.get_trace(trace_id)
@@ -492,7 +626,7 @@ def render_trace_detail(trace_id: str):
             unsafe_allow_html=True,
         )
     with col2:
-        if st.button("❌ Close"):
+        if st.button("Close"):
             del st.session_state["selected_trace_id"]
             st.rerun()
 
@@ -540,21 +674,21 @@ def render_trace_detail(trace_id: str):
         )
 
     # Input/Output
-    st.markdown("### 📥 Input")
+    st.markdown("### Input")
     st.code(trace.user_input, language=None)
 
-    st.markdown("### 📤 Output")
+    st.markdown("### Output")
     if trace.final_answer:
         st.markdown(trace.final_answer)
     else:
         st.warning("No output generated.")
 
     if trace.error:
-        st.markdown("### ❌ Error")
+        st.markdown("### Error")
         st.error(trace.error)
 
     # Steps timeline
-    st.markdown("### 📊 Execution Steps")
+    st.markdown("### Execution Steps")
     steps = client.dbStore.get_steps(trace_id)
 
     if steps:
@@ -575,7 +709,7 @@ def render_trace_detail(trace_id: str):
 
         # Steps list
         for step in steps:
-            cache_badge = " ⚡ Cached" if step.cache_hit else ""
+            cache_badge = " [Cached]" if step.cache_hit else ""
 
             with st.expander(
                 f"**{step.step_seq + 1}. {step.node_name.upper()}**{cache_badge} — {step.latency_ms:.0f}ms"
@@ -604,7 +738,7 @@ def render_trace_detail(trace_id: str):
 
 def render_analytics_page():
     """Render analytics dashboard."""
-    st.markdown("## 📊 Analytics")
+    st.markdown("## Analytics")
     st.markdown("Insights into your agent workflows.")
 
     client = get_client()
@@ -740,11 +874,11 @@ def main():
     """Main application entry point."""
     page = render_sidebar()
 
-    if page == "🚀 New Run":
+    if page == "New Run":
         render_new_run_page()
-    elif page == "📋 Trace History":
+    elif page == "Trace History":
         render_trace_history_page()
-    elif page == "📊 Analytics":
+    elif page == "Analytics":
         render_analytics_page()
 
 

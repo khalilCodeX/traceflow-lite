@@ -50,6 +50,4 @@ jobs:
         run: poetry install --with dev
 
       - name: Run unit tests (mocked, no API keys required)
-        run: |
-          poetry run pytest tests/test_cache.py tests/test_unit.py tests/test_client_mock.py tests/test_persistence.py \
-            -v --tb=short --ignore=tests/test_client.py --ignore=tests/test_revision.py --ignore=tests/test_steps.py
+        run: poetry run pytest tests/ -v --tb=short -m "not requires_api"

@@ -7,6 +7,8 @@ from tf_types import RunConfig, Mode, RetrievedChunk
 from utils.retriever_utils import chroma_retriever
 from utils.vector_types import chroma_params
 
+pytestmark = pytest.mark.requires_api  # All tests in this file need API keys
+
 
 @pytest.fixture
 def client():

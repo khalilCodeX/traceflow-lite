@@ -42,20 +42,37 @@ class chroma_retriever:
         for i in range(0, len(splits), batch_size):
             yield splits[i : i + batch_size]
 
-    def create_vector_store(self, splits: list[str], batch_size: int = 1000):
-        for batch in tqdm(
-            self.create_document_batches(splits, batch_size), desc="embedding batches", unit="batch"
-        ):
+    def create_vector_store(
+        self,
+        splits: list[str],
+        batch_size: int = 1000,
+        progress_callback: callable = None,
+    ):
+        """Create vector store from document splits.
+
+        Args:
+            splits: List of document chunks to embed
+            batch_size: Number of documents per batch
+            progress_callback: Optional callback(current, total) for progress updates
+        """
+        batches = list(self.create_document_batches(splits, batch_size))
+        total_batches = len(batches)
+
+        for i, batch in enumerate(tqdm(batches, desc="embedding batches", unit="batch")):
             embeddings = self.client.embeddings.create(model="text-embedding-3-small", input=batch)
 
             embedding_vectors = [e.embedding for e in embeddings.data]
 
             self.collection.add(
-                ids=[str(i) for i in range(len(batch))],
+                ids=[str(i * batch_size + j) for j in range(len(batch))],
                 embeddings=embedding_vectors,
                 documents=batch,
-                metadatas=[{"source": f"doc_{i}"} for i in range(len(batch))],
+                metadatas=[{"source": f"doc_{i * batch_size + j}"} for j in range(len(batch))],
             )
+
+            # Call progress callback if provided
+            if progress_callback:
+                progress_callback(i + 1, total_batches)
 
     def retrieve_similar_docs(self, query: str, n_results: int = 5) -> list[RetrievedChunk]:
         query_response = self.client.embeddings.create(
