@@ -353,7 +353,6 @@ def evaluator_node(state: TraceFlowState) -> dict:
     new_revisions = state.revisions
     if report.decision == EvalDecision.REVISE:
         new_revisions = state.revisions + 1
-        
 
     return {"eval_report": report, "executed_steps": steps, "revisions": new_revisions}
 
