@@ -144,7 +144,7 @@ def executor_node(state: TraceFlowState) -> dict:
     context_str = ""
     if state.context:
         context_str = "\n".join(
-            [f"[{i+1}] {chunk.content}" for i, chunk in enumerate(state.context)]
+            [f"[{i + 1}] {chunk.content}" for i, chunk in enumerate(state.context)]
         )
         context_str = f"\n\nContext:\n{context_str}"
 
