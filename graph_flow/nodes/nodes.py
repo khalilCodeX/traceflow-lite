@@ -151,7 +151,7 @@ def executor_node(state: TraceFlowState) -> dict:
     # Include revision instructions if this is a retry
     revision_str = ""
     if state.revisions > 0 and state.eval_report and state.eval_report.revision_instructions:
-        revision_str = f"\n\nIMPORTANT: {state.eval_report.revision_instructions}"
+        revision_str = f"\n\nIMPORTANT (Attempt {state.revisions + 1}): {state.eval_report.revision_instructions}"
 
     system_prompt = f"You are a helpful assistant. Answer the user's question concisely.{context_str}{revision_str}"
 
