@@ -197,7 +197,7 @@ result = client.replay(
 | `max_revisions` | `int` | `3` | Max revision attempts before fallback |
 | `strictness` | `Strictness` | `BALANCED` | Eval gate strictness (LENIENT, BALANCED, STRICT) |
 | `retriever_fn` | `Callable` | `None` | Custom retriever callback for RAG |
-| `enable_cache` | `bool` | `True` | Enable response caching (roadmap) |
+| `enable_cache` | `bool` | `True` | Enable LLM response caching |
 
 ---
 
@@ -264,10 +264,16 @@ pytest tests/test_client.py::test_basic_run_without_retriever -v
 
 ## Roadmap
 
-- [ ] Multi-provider fallback (Anthropic, Gemini)
-- [ ] Response caching implementation
-- [ ] Streamlit ops dashboard
+- [x] Multi-provider support (OpenAI, Anthropic)
+- [x] Response caching implementation
+- [x] Streamlit ops dashboard
+- [x] Trace persistence with SQLite + WAL mode
+- [x] Eval gate pattern with revision loop
+- [x] Cost tracking per request
+- [x] CI/CD with GitHub Actions
+- [x] Architecture Decision Records (ADRs)
 - [ ] CLI tool (`traceflow run "query"`)
+- [ ] Budget-aware model fallback
 - [ ] Advanced evaluators (relevance scoring, citation validation)
 - [ ] Async execution support
 - [ ] OpenTelemetry export integration
