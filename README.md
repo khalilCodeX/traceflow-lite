@@ -62,20 +62,48 @@ All interactions are traced to SQLite for debugging and replay.
 
 ## Installation
 
+### Using Poetry (recommended)
+
 ```bash
-git clone https://github.com/your-repo/traceflow-lite.git
+git clone https://github.com/khalilCodeX/traceflow-lite.git
+cd traceflow-lite
+poetry install
+```
+
+### Using pip
+
+```bash
+git clone https://github.com/khalilCodeX/traceflow-lite.git
 cd traceflow-lite
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -r requirements.txt
 ```
 
-### Dependencies
+### Development Setup
 
 ```bash
-pip install langgraph openai tiktoken tenacity pydantic python-dotenv opentelemetry-sdk
-# Optional for RAG:
-pip install chromadb langchain-text-splitters
+# Install with dev dependencies
+poetry install --with dev
+
+# Run tests
+poetry run pytest
+
+# Run linter
+poetry run ruff check .
+```
+
+### Adding Dependencies
+
+```bash
+# Add a runtime dependency
+poetry add <package>
+
+# Add a dev dependency
+poetry add --group dev <package>
+
+# After adding, sync requirements.txt for Streamlit Cloud:
+poetry export --without-hashes -o requirements.txt
 ```
 
 ---
