@@ -49,7 +49,7 @@ class chroma_retriever:
         progress_callback: callable = None,
     ):
         """Create vector store from document splits.
-        
+
         Args:
             splits: List of document chunks to embed
             batch_size: Number of documents per batch
@@ -57,7 +57,7 @@ class chroma_retriever:
         """
         batches = list(self.create_document_batches(splits, batch_size))
         total_batches = len(batches)
-        
+
         for i, batch in enumerate(tqdm(batches, desc="embedding batches", unit="batch")):
             embeddings = self.client.embeddings.create(model="text-embedding-3-small", input=batch)
 
@@ -69,7 +69,7 @@ class chroma_retriever:
                 documents=batch,
                 metadatas=[{"source": f"doc_{i * batch_size + j}"} for j in range(len(batch))],
             )
-            
+
             # Call progress callback if provided
             if progress_callback:
                 progress_callback(i + 1, total_batches)

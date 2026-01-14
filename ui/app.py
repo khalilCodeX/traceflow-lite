@@ -25,9 +25,7 @@ except ImportError:
     RAG_AVAILABLE = False
 
 # Page config
-st.set_page_config(
-    page_title="TraceFlow Lite", layout="wide", initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="TraceFlow Lite", layout="wide", initial_sidebar_state="expanded")
 
 # Custom CSS for modern look
 st.markdown(
@@ -326,9 +324,7 @@ def render_new_run_page():
     top_k = 5  # Default value
     if enable_rag:
         if not RAG_AVAILABLE:
-            st.error(
-                "RAG dependencies not available. Install chromadb and sentence-transformers."
-            )
+            st.error("RAG dependencies not available. Install chromadb and sentence-transformers.")
         elif not os.getenv("OPENAI_API_KEY"):
             st.warning("OPENAI_API_KEY not set. Required for embeddings.")
         else:
@@ -378,35 +374,30 @@ def render_new_run_page():
                     try:
                         db_path = "./chroma_db"
                         retriever = get_retriever(collection_name, db_path)
-                        
+
                         # Create progress bar
                         progress_bar = st.progress(0, text="Creating embeddings...")
-                        
+
                         def update_progress(current, total):
                             progress = current / total
                             progress_bar.progress(
-                                progress,
-                                text=f"Processing batch {current}/{total}..."
+                                progress, text=f"Processing batch {current}/{total}..."
                             )
-                        
-                        retriever.create_vector_store(
-                            documents,
-                            progress_callback=update_progress
-                        )
-                        
+
+                        retriever.create_vector_store(documents, progress_callback=update_progress)
+
                         progress_bar.progress(1.0, text="Complete!")
                         st.session_state["rag_ready"] = True
                         st.session_state["rag_collection"] = collection_name
-                        st.success(
-                            f"Vector store created with {len(documents)} documents!"
-                        )
+                        st.success(f"Vector store created with {len(documents)} documents!")
                     except Exception as e:
                         st.error(f"Failed to create vector store: {e}")
 
             # Check if RAG is ready
-            if st.session_state.get("rag_ready") and st.session_state.get(
-                "rag_collection"
-            ) == collection_name:
+            if (
+                st.session_state.get("rag_ready")
+                and st.session_state.get("rag_collection") == collection_name
+            ):
                 st.success("RAG is ready! Retriever will be used in queries.")
                 retriever = get_retriever(collection_name, "./chroma_db")
                 retriever_fn = retriever.retrieve_similar_docs
