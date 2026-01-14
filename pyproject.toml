@@ -47,6 +47,9 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 addopts = "-q --disable-warnings --maxfail=1"
 testpaths = ["tests"]
+markers = [
+    "requires_api: tests that require API keys (OpenAI, Anthropic)"
+]
 
 [tool.ruff]
 line-length = 100

@@ -2,6 +2,8 @@
 
 import pytest
 from client import TraceFlowClient
+
+pytestmark = pytest.mark.requires_api  # All tests in this file need API keys
 from tf_types import RunConfig, Mode, Strictness, RetrievedChunk
 
 
