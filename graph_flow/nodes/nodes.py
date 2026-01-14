@@ -143,11 +143,17 @@ def executor_node(state: TraceFlowState) -> dict:
 
     context_str = ""
     if state.context:
-        context_str = "\n".join([f"- {chunk.content}" for chunk in state.context])
+        context_str = "\n".join(
+            [f"[{i+1}] {chunk.content}" for i, chunk in enumerate(state.context)]
+        )
         context_str = f"\n\nContext:\n{context_str}"
-    system_prompt = (
-        f"You are a helpful assistant. Answer the user's question concisely.{context_str}"
-    )
+
+    # Include revision instructions if this is a retry
+    revision_str = ""
+    if state.revisions > 0 and state.eval_report and state.eval_report.revision_instructions:
+        revision_str = f"\n\nIMPORTANT: {state.eval_report.revision_instructions}"
+
+    system_prompt = f"You are a helpful assistant. Answer the user's question concisely.{context_str}{revision_str}"
 
     response = provider.chat_complete(
         model=state.config.model,
@@ -214,7 +220,7 @@ def evaluator_node(state: TraceFlowState) -> dict:
 
     cost_exceeded = config.max_cost_usd and draft and draft.cost_usd > config.max_cost_usd
     latency_exceeded = config.max_latency_ms and draft and draft.latency_ms > config.max_latency_ms
-    revision_limit_reached = state.revisions >= config.max_revisions
+    revision_limit_reached = state.revisions + 1 >= config.max_revisions
 
     # Mode-specific checks
     citation_coverage_ok = True
@@ -347,6 +353,7 @@ def evaluator_node(state: TraceFlowState) -> dict:
     new_revisions = state.revisions
     if report.decision == EvalDecision.REVISE:
         new_revisions = state.revisions + 1
+        
 
     return {"eval_report": report, "executed_steps": steps, "revisions": new_revisions}
 
