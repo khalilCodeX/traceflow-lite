@@ -1,45 +1,51 @@
-[project]
+[tool.poetry]
 name = "traceflow-lite"
 version = "0.1.0"
 description = "TraceFlow Lite — Agent Reliability & Evaluation Control Plane"
-requires-python = ">=3.11"
-dependencies = [
-  "pydantic>=2.7",
-  "pydantic-settings>=2.3",
-  "langgraph>=0.2.0",
-  "langchain-core>=0.3.0",
-  "streamlit>=1.36",
-  "chromadb>=0.5.0",
-  "sentence-transformers>=3.0.0",
-  "tenacity>=8.2.3",
-  "cachetools>=5.3.3",
-  "python-dotenv>=1.0.1",
-  "opentelemetry-sdk>=1.39.0",
-  "openai>=2.14.0",
-  "python-dotenv>=1.2.0",
-  "anthropic>=0.18.0",
-  "tiktoken>=0.7.0",
+authors = ["Khalil <khalil@example.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/khalilCodeX/traceflow-lite"
+packages = [
+    { include = "providers" },
+    { include = "graph_flow" },
+    { include = "persistence" },
+    { include = "utils" },
+    { include = "ui" },
+    { include = "client.py" },
+    { include = "tf_types.py" },
+    { include = "state.py" },
 ]
 
-[project.optional-dependencies]
-dev = [
-  "pytest>=8.2",
-  "pytest-cov>=5.0",
-  "ruff>=0.5.0",
-  "mypy>=1.10",
-]
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.7"
+pydantic-settings = "^2.3"
+langgraph = "^0.2.0"
+langchain-core = "^0.3.0"
+streamlit = "^1.36"
+chromadb = "^0.5.0"
+sentence-transformers = "^3.0.0"
+tenacity = "^8.2.3"
+cachetools = "^5.3.3"
+python-dotenv = "^1.0.1"
+opentelemetry-sdk = "^1.39.0"
+openai = "^2.14.0"
+anthropic = "^0.18.0"
+tiktoken = "^0.7.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2"
+pytest-cov = "^5.0"
+ruff = "^0.5.0"
+mypy = "^1.10"
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["providers*", "graph_flow*", "persistence*", "utils*"]
-exclude = ["tests*", "Architecture*"]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "-q --disable-warnings --maxfail=1 --cov=traceflow --cov-report=term-missing"
+addopts = "-q --disable-warnings --maxfail=1"
 testpaths = ["tests"]
 
 [tool.ruff]

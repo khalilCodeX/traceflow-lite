@@ -559,7 +559,8 @@ class TestProviderRouter:
         assert isinstance(provider, OpenAIProvider)
 
     @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"})
-    def test_get_provider_returns_anthropic(self):
+    @patch("providers.anthropic_provider.Anthropic")
+    def test_get_provider_returns_anthropic(self, mock_anthropic):
         """get_provider should return Anthropic provider for anthropic config."""
         from providers.router import get_provider
         from providers.anthropic_provider import AnthropicProvider
@@ -568,6 +569,7 @@ class TestProviderRouter:
         provider = get_provider(config)
 
         assert isinstance(provider, AnthropicProvider)
+        mock_anthropic.assert_called_once()
 
     @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
     def test_get_provider_wraps_with_cache(self):
