@@ -5,10 +5,20 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-**A control plane that makes agentic systems shippable: tracing + eval gates + fallback + budgets + replay.**
-**A production-grade SDK for building reliable, observable AI agent workflows.**
+<p align="center">
+  <a href="https://traceflow-lite.streamlit.app/">🚀 Live Demo</a> •
+  <a href="https://app.guidde.com/share/playbooks/3ZgSzcA576cd5jDLJrspKd?origin=ACSh8VYJvZPv1rP1I4teqXtCTpY2">📺 Watch Video Demo</a>
+</p>
 
-TraceFlow Lite wraps your LLM calls with enterprise-ready reliability mechanisms: eval gates, cost/latency constraints, provider abstraction, trace persistence, and replay capabilities — all orchestrated through LangGraph.
+**An Agent Reliability & Evaluation Control Plane SDK.**  
+Tracing + replay (SQLite), eval gates (PASS/REVISE/FALLBACK), provider routing/fallback, and cost/latency budgets — so agentic systems are **safe to ship and easy to operate**.
+
+> **Portfolio summary:** Built an agent reliability control plane SDK with eval gates (PASS/REVISE/FALLBACK), trace + replay (SQLite), provider routing/fallback, and cost/latency budgets — implemented as an internal LangGraph-orchestrated pipeline.
+
+**Proof:** Live Streamlit demo + video walkthrough + persisted traces you can replay.
+
+TraceFlow Lite sits between your app and LLM providers, enforcing **change safety** (quality gates + revise loops) and **operability** (traces, replay, budgets, retries).  
+*Internally, TraceFlow orchestrates a multi-node workflow using LangGraph.*
 
 ---
 
@@ -29,7 +39,7 @@ TraceFlow Lite solves these by providing a **control plane** that sits between y
 
 | Feature | Description |
 |---------|-------------|
-| 🔄 **LangGraph Orchestration** | Multi-step agent workflow with conditional routing and revision loops |
+| 🧠 **Workflow Orchestration (LangGraph)** | Internal multi-step workflow with routing + loops |
 | 🛡️ **Eval Gates** | Automatic cost, latency, and quality checks before responses are finalized |
 | 💰 **Cost Tracking** | Per-request token counting via tiktoken with USD cost calculation |
 | 🔁 **Retry & Revision** | Tenacity-powered retries + intelligent revision loop for quality |
@@ -108,7 +118,38 @@ poetry export --without-hashes -o requirements.txt
 
 ---
 
-## Quick Start
+## Quickstart
+
+Get up and running in 60 seconds:
+
+```bash
+# 1. Clone and install
+git clone https://github.com/khalilCodeX/traceflow-lite.git
+cd traceflow-lite
+poetry install
+
+# 2. Set your API key
+export OPENAI_API_KEY="sk-..."
+
+# 3. Launch the UI
+make ui
+```
+
+Open http://localhost:8501 — select a model, type a query, and hit **Execute**. That's it!
+
+Or try it programmatically:
+
+```bash
+poetry run python -c "
+from client import TraceFlowClient
+result = TraceFlowClient().run('What is machine learning?')
+print(result.answer)
+"
+```
+
+---
+
+## Programmatic Usage
 
 ```python
 from client import TraceFlowClient
