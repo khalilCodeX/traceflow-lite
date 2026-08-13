@@ -13,7 +13,7 @@
 **An Agent Reliability & Evaluation Control Plane SDK.**  
 Tracing + replay (SQLite), eval gates (PASS/REVISE/FALLBACK), provider routing/fallback, and cost/latency budgets — so agentic systems are **safe to ship and easy to operate**.
 
-> **Portfolio summary:** Built an agent reliability control plane SDK with eval gates (PASS/REVISE/FALLBACK), trace + replay (SQLite), provider routing/fallback, and cost/latency budgets — implemented as an internal LangGraph-orchestrated pipeline.
+> **Summary:** Built an agent reliability control plane SDK with eval gates (PASS/REVISE/FALLBACK), trace + replay (SQLite), provider routing/fallback, and cost/latency budgets — implemented as an internal LangGraph-orchestrated pipeline.
 
 **Proof:** Live Streamlit demo + video walkthrough + persisted traces you can replay.
 
